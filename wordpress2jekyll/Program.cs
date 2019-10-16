@@ -10,17 +10,19 @@ namespace wordpress2jekyll
     {
         static void Main(string[] args)
         {
-            ImportAsync("export.zip").Wait();
+            ImportAsync("export.zip", "jekyll.zip").Wait();
         }
 
-        private static async Task ImportAsync(string zipFilePath)
+        private static async Task ImportAsync(string exportZipFilePath, string jekyllZipFilePath)
         {
             try
             {
-                using (var stream = File.OpenRead(zipFilePath))
-                using (var archive = new ZipArchive(stream, ZipArchiveMode.Read))
+                using (var exportStream = File.OpenRead(exportZipFilePath))
+                using (var jekyllStream = File.OpenWrite(jekyllZipFilePath))
+                using (var exportArchive = new ZipArchive(exportStream, ZipArchiveMode.Read))
+                using (var jekyllArchive = new ZipArchive(jekyllStream, ZipArchiveMode.Create))
                 {
-                    var xmlEntries = from e in archive.Entries
+                    var xmlEntries = from e in exportArchive.Entries
                                      where e.Length != 0
                                      && e.Name.EndsWith(".xml")
                                      orderby e.FullName
@@ -29,7 +31,7 @@ namespace wordpress2jekyll
                     foreach (var entry in xmlEntries)
                     {
                         Console.WriteLine($"Opening '{entry.FullName}'...");
-                        await ImportEntryAsync(entry);
+                        await ImportEntryAsync(entry, jekyllArchive);
                     }
                 }
             }
@@ -39,7 +41,7 @@ namespace wordpress2jekyll
             }
         }
 
-        private static async Task ImportEntryAsync(ZipArchiveEntry entry)
+        private static async Task ImportEntryAsync(ZipArchiveEntry entry, ZipArchive jekyllArchive)
         {
             using (var stream = entry.Open())
             {
@@ -47,7 +49,23 @@ namespace wordpress2jekyll
 
                 Console.WriteLine($"{posts.Length} published posts");
 
-                throw new NotImplementedException();
+                foreach (var post in posts)
+                {
+                    await ImportPostAsync(post, jekyllArchive);
+                }
+            }
+        }
+
+        private static async Task ImportPostAsync(Post post, ZipArchive jekyllArchive)
+        {
+            var entry = jekyllArchive.CreateEntry("_posts/" + post.FileName);
+
+            Console.WriteLine($"Processing {post.FileName}");
+
+            using (var stream = entry.Open())
+            using (var writer = new StreamWriter(stream))
+            {
+                await writer.WriteAsync(post.Content);
             }
         }
     }

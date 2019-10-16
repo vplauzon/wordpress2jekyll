@@ -13,13 +13,28 @@ namespace wordpress2jekyll
         private static readonly XNamespace WP = XNamespace.Get("http://wordpress.org/export/1.2/");
         private static readonly XNamespace CONTENT = XNamespace.Get("http://purl.org/rss/1.0/modules/content/");
 
-        private Post(string title, string content)
+        private Post(string title, string link, string content)
         {
             Title = title;
+            Link = link;
             Content = content;
         }
 
         public string Title { get; }
+
+        public string Link { get; }
+
+        public string FileName
+        {
+            get
+            {
+                //  Remove leading and trailing '/'
+                var parts = Link.Split('/').Skip(1).Reverse().Skip(1).Reverse();
+                var name = string.Join('-', parts) + ".md";
+
+                return name;
+            }
+        }
 
         public string Content { get; }
 
@@ -43,9 +58,11 @@ namespace wordpress2jekyll
         private static Post FromItemElement(XElement element)
         {
             var title = element.Element("title").Value;
+            var link = element.Element("link").Value;
             var encoded = element.Element(CONTENT + "encoded").Value;
+            var truncatedLink = new Uri(link).AbsolutePath;
 
-            return new Post(title, encoded);
+            return new Post(title, truncatedLink, encoded);
         }
     }
 }
