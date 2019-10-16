@@ -26,12 +26,28 @@ namespace wordpress2jekyll
                                      orderby e.FullName
                                      select e;
 
-                    throw new NotImplementedException();
+                    foreach (var entry in xmlEntries)
+                    {
+                        Console.WriteLine($"Opening '{entry.FullName}'...");
+                        await ImportEntryAsync(entry);
+                    }
                 }
             }
             catch (FileNotFoundException ex)
             {
                 Console.Error.WriteLine($"File '{ex.FileName}' not found");
+            }
+        }
+
+        private static async Task ImportEntryAsync(ZipArchiveEntry entry)
+        {
+            using (var stream = entry.Open())
+            {
+                var posts = await Post.LoadPublishedAsync(stream);
+
+                Console.WriteLine($"{posts.Length} published posts");
+
+                throw new NotImplementedException();
             }
         }
     }
