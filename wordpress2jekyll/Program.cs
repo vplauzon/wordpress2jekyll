@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -58,14 +59,46 @@ namespace wordpress2jekyll
 
         private static async Task ImportPostAsync(Post post, ZipArchive jekyllArchive)
         {
-            var entry = jekyllArchive.CreateEntry(post.FilePath);
-
             Console.WriteLine($"Processing {post.FilePath}");
+
+            var bundles = from a in post.Assets
+                          let task = a.GetBytesAsync()
+                          orderby a.FilePath descending
+                          select new { Task = task, Asset = a };
+            var bundleStack = ImmutableStack.Create(bundles.ToArray());
+
+            await WriteToArchiveAsync(jekyllArchive, post.FilePath, post.Content);
+
+            while (!bundleStack.IsEmpty)
+            {
+                var bundle = bundleStack.Peek();
+                var content = await bundle.Task;
+
+                var asset = bundle.Asset;
+
+                await WriteToArchiveAsync(jekyllArchive, asset.FilePath, content);
+                bundleStack = bundleStack.Pop();
+            }
+        }
+
+        private static async Task WriteToArchiveAsync(ZipArchive archive, string path, string content)
+        {
+            var entry = archive.CreateEntry(path);
 
             using (var stream = entry.Open())
             using (var writer = new StreamWriter(stream))
             {
-                await writer.WriteAsync(post.Content);
+                await writer.WriteAsync(content);
+            }
+        }
+
+        private static async Task WriteToArchiveAsync(ZipArchive archive, string path, byte[] content)
+        {
+            var entry = archive.CreateEntry(path);
+
+            using (var stream = entry.Open())
+            {
+                await stream.WriteAsync(content);
             }
         }
     }
