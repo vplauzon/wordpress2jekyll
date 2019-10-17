@@ -51,8 +51,14 @@ namespace wordpress2jekyll
             var document = await XDocument.LoadAsync(stream, LoadOptions.None, CancellationToken.None);
             var statusName = WP + "status";
             var postTypeName = WP + "post_type";
-            //"attachment"
-            var posts = from i in document.Root.Elements().Elements("item")
+            var items = document.Root.Elements().Elements("item");
+            var attachments = from i in items
+                              let postType = i.Element(postTypeName)
+                              where postType != null
+                              && postType.Value == "attachment"
+                              let guid = i.Element("guid")
+                              select guid.Value;
+            var posts = from i in items
                         let status = i.Element(statusName)
                         let postType = i.Element(postTypeName)
                         where status != null
