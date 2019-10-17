@@ -26,7 +26,7 @@ namespace wordpress2jekyll
             Link = link;
             PublicationDate = publicationDate;
             Content = content;
-            Assets = ExtractAssets(content, publicationDate, allAttachments);
+            Assets = ExtractAssets(content, allAttachments, link, publicationDate);
         }
 
         public string Title { get; }
@@ -78,30 +78,33 @@ namespace wordpress2jekyll
 
         private static Asset[] ExtractAssets(
             string content,
-            DateTime publicationDate,
-            string[] allAttachments)
+            string[] allAttachments,
+            string postLink,
+            DateTime publicationDate)
         {
+            var postName = Path.GetFileNameWithoutExtension(postLink);
             var attachments = from attachment in allAttachments
                               where content.Contains(attachment)
                               select attachment;
             var assets = ImmutableList<Asset>.Empty;
-            var paths = ImmutableHashSet<string>.Empty;
+            var assetNames = ImmutableHashSet<string>.Empty;
 
             foreach (var attachment in attachments)
             {
                 var uri = new Uri(attachment);
                 var fileName = Path.GetFileName(uri.LocalPath);
 
-                if (paths.Contains(fileName))
+                if (assetNames.Contains(fileName))
                 {
                     fileName = Guid.NewGuid().ToString() + "-" + fileName;
                 }
+                assetNames = assetNames.Add(fileName);
 
-                var filePath = $"";
-                var asset = new Asset(uri, fileName);
+                var filePath =
+                    $"_assets/{publicationDate.Year}/{publicationDate.Month}/{postName}/{fileName}";
+                var asset = new Asset(uri, filePath);
 
                 assets = assets.Add(asset);
-                paths = paths.Add(fileName);
             }
 
             return assets.ToArray();
