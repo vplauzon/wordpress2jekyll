@@ -13,10 +13,15 @@ namespace wordpress2jekyll
         private static readonly XNamespace WP = XNamespace.Get("http://wordpress.org/export/1.2/");
         private static readonly XNamespace CONTENT = XNamespace.Get("http://purl.org/rss/1.0/modules/content/");
 
-        private Post(string title, string link, string content)
+        private Post(
+            string title,
+            string link,
+            DateTime publicationDate,
+            string content)
         {
             Title = title;
             Link = link;
+            PublicationDate = publicationDate;
             Content = content;
         }
 
@@ -24,15 +29,18 @@ namespace wordpress2jekyll
 
         public string Link { get; }
 
-        public string FileName
+        public DateTime PublicationDate { get; }
+
+        public string FilePath
         {
             get
             {
                 //  Remove leading and trailing '/'
                 var parts = Link.Split('/').Skip(1).Reverse().Skip(1).Reverse();
                 var name = string.Join('-', parts) + ".md";
+                var path = $"_posts/{PublicationDate.Year}/{PublicationDate.Month}/{name}";
 
-                return name;
+                return path;
             }
         }
 
@@ -43,6 +51,7 @@ namespace wordpress2jekyll
             var document = await XDocument.LoadAsync(stream, LoadOptions.None, CancellationToken.None);
             var statusName = WP + "status";
             var postTypeName = WP + "post_type";
+            //"attachment"
             var posts = from i in document.Root.Elements().Elements("item")
                         let status = i.Element(statusName)
                         let postType = i.Element(postTypeName)
@@ -59,10 +68,12 @@ namespace wordpress2jekyll
         {
             var title = element.Element("title").Value;
             var link = element.Element("link").Value;
+            var pubDateText = element.Element("pubDate").Value;
+            var pubDate = DateTime.Parse(pubDateText);
             var encoded = element.Element(CONTENT + "encoded").Value;
             var truncatedLink = new Uri(link).AbsolutePath;
 
-            return new Post(title, truncatedLink, encoded);
+            return new Post(title, truncatedLink, pubDate, encoded);
         }
     }
 }

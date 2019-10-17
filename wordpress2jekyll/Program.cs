@@ -58,9 +58,9 @@ namespace wordpress2jekyll
 
         private static async Task ImportPostAsync(Post post, ZipArchive jekyllArchive)
         {
-            var entry = jekyllArchive.CreateEntry("_posts/" + post.FileName);
+            var entry = jekyllArchive.CreateEntry(post.FilePath);
 
-            Console.WriteLine($"Processing {post.FileName}");
+            Console.WriteLine($"Processing {post.FilePath}");
 
             using (var stream = entry.Open())
             using (var writer = new StreamWriter(stream))
