@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -21,14 +22,11 @@ namespace wordpress2jekyll
             string content,
             string[] allAttachments)
         {
-            var attachments = from attachment in allAttachments
-                              where content.Contains(attachment)
-                              select attachment;
-
             Title = title;
             Link = link;
             PublicationDate = publicationDate;
             Content = content;
+            Assets = ExtractAssets(content, publicationDate, allAttachments);
         }
 
         public string Title { get; }
@@ -52,6 +50,8 @@ namespace wordpress2jekyll
 
         public string Content { get; }
 
+        public Asset[] Assets { get; }
+
         public static async Task<Post[]> LoadPublishedAsync(Stream stream)
         {
             var document = await XDocument.LoadAsync(stream, LoadOptions.None, CancellationToken.None);
@@ -74,6 +74,37 @@ namespace wordpress2jekyll
                         select FromItemElement(i, allAttachments);
 
             return posts.ToArray();
+        }
+
+        private static Asset[] ExtractAssets(
+            string content,
+            DateTime publicationDate,
+            string[] allAttachments)
+        {
+            var attachments = from attachment in allAttachments
+                              where content.Contains(attachment)
+                              select attachment;
+            var assets = ImmutableList<Asset>.Empty;
+            var paths = ImmutableHashSet<string>.Empty;
+
+            foreach (var attachment in attachments)
+            {
+                var uri = new Uri(attachment);
+                var fileName = Path.GetFileName(uri.LocalPath);
+
+                if (paths.Contains(fileName))
+                {
+                    fileName = Guid.NewGuid().ToString() + "-" + fileName;
+                }
+
+                var filePath = $"";
+                var asset = new Asset(uri, fileName);
+
+                assets = assets.Add(asset);
+                paths = paths.Add(fileName);
+            }
+
+            return assets.ToArray();
         }
 
         private static Post FromItemElement(XElement element, string[] allAttachments)
