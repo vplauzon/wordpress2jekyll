@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -17,8 +18,13 @@ namespace wordpress2jekyll
             string title,
             string link,
             DateTime publicationDate,
-            string content)
+            string content,
+            string[] allAttachments)
         {
+            var attachments = from attachment in allAttachments
+                              where content.Contains(attachment)
+                              select attachment;
+
             Title = title;
             Link = link;
             PublicationDate = publicationDate;
@@ -52,12 +58,12 @@ namespace wordpress2jekyll
             var statusName = WP + "status";
             var postTypeName = WP + "post_type";
             var items = document.Root.Elements().Elements("item");
-            var attachments = (from i in items
-                               let postType = i.Element(postTypeName)
-                               where postType != null
-                               && postType.Value == "attachment"
-                               let guid = i.Element("guid")
-                               select guid.Value).ToArray();
+            var allAttachments = (from i in items
+                                  let postType = i.Element(postTypeName)
+                                  where postType != null
+                                  && postType.Value == "attachment"
+                                  let guid = i.Element("guid")
+                                  select guid.Value).ToArray();
             var posts = from i in items
                         let status = i.Element(statusName)
                         let postType = i.Element(postTypeName)
@@ -65,12 +71,12 @@ namespace wordpress2jekyll
                         && postType != null
                         && status.Value == "publish"
                         && postType.Value == "post"
-                        select FromItemElement(i);
+                        select FromItemElement(i, allAttachments);
 
             return posts.ToArray();
         }
 
-        private static Post FromItemElement(XElement element)
+        private static Post FromItemElement(XElement element, string[] allAttachments)
         {
             var title = element.Element("title").Value;
             var link = element.Element("link").Value;
@@ -79,7 +85,7 @@ namespace wordpress2jekyll
             var encoded = element.Element(CONTENT + "encoded").Value;
             var truncatedLink = new Uri(link).AbsolutePath;
 
-            return new Post(title, truncatedLink, pubDate, encoded);
+            return new Post(title, truncatedLink, pubDate, encoded, allAttachments);
         }
     }
 }
