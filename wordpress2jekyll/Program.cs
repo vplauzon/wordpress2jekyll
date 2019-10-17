@@ -11,7 +11,7 @@ namespace wordpress2jekyll
     {
         static void Main(string[] args)
         {
-            ImportAsync("export.zip", "jekyll.zip", 2).Wait();
+            ImportAsync("export.zip", "jekyll.zip", 10).Wait();
         }
 
         private static async Task ImportAsync(string exportZipFilePath, string jekyllZipFilePath, int? maxPostCount)
@@ -72,7 +72,7 @@ namespace wordpress2jekyll
 
         private static async Task ImportPostAsync(Post post, ZipArchive jekyllArchive)
         {
-            Console.WriteLine($"Processing {post.FilePath}");
+            Console.WriteLine($"  Processing {post.FilePath}...");
 
             var bundles = from a in post.Assets
                           let task = a.GetBytesAsync()
@@ -89,6 +89,7 @@ namespace wordpress2jekyll
 
                 var asset = bundle.Asset;
 
+                Console.WriteLine($"    Writing {asset.SourceUri}...");
                 await WriteToArchiveAsync(jekyllArchive, asset.FilePath, content);
                 bundleStack = bundleStack.Pop();
             }

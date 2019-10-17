@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace wordpress2jekyll
 {
     internal class Asset
     {
+        private static readonly HttpClient _httpClient = new HttpClient();
+
         public Asset(Uri sourceUri, string filePath)
         {
             SourceUri = sourceUri;
@@ -16,9 +19,12 @@ namespace wordpress2jekyll
 
         public string FilePath { get; }
 
-        public Task<byte[]> GetBytesAsync()
+        public async Task<byte[]> GetBytesAsync()
         {
-            return Task.FromResult(new byte[] { 1, 42, 78, 45 });
+            var response = await _httpClient.GetAsync(SourceUri);
+            var content = await response.Content.ReadAsByteArrayAsync();
+
+            return content;
         }
     }
 }
