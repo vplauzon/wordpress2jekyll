@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -25,8 +26,8 @@ namespace wordpress2jekyll
             Title = title;
             Link = link;
             PublicationDate = publicationDate;
-            Content = content;
             Assets = ExtractAssets(content, allAttachments, link, publicationDate);
+            Content = ComputeContent(content, Assets);
         }
 
         public string Title { get; }
@@ -82,7 +83,7 @@ namespace wordpress2jekyll
             string postLink,
             DateTime publicationDate)
         {
-            var postName = Path.GetFileNameWithoutExtension(postLink);
+            var postName = Path.GetFileName(postLink.Trim('/'));
             var attachments = from attachment in allAttachments
                               where content.Contains(attachment)
                               select attachment;
@@ -101,13 +102,32 @@ namespace wordpress2jekyll
                 assetNames = assetNames.Add(fileName);
 
                 var filePath =
-                    $"_assets/{publicationDate.Year}/{publicationDate.Month}/{postName}/{fileName}";
+                    $"assets/{publicationDate.Year}/{publicationDate.Month}/{postName}/{fileName}";
                 var asset = new Asset(uri, filePath);
 
                 assets = assets.Add(asset);
             }
 
             return assets.ToArray();
+        }
+
+        private static string ComputeContent(string content, Asset[] assets)
+        {
+            if (assets.Any())
+            {
+                var builder = new StringBuilder(content);
+
+                foreach(var asset in assets)
+                {
+                    builder.Replace(asset.SourceUri.ToString(), asset.FilePath);
+                }
+
+                return builder.ToString();
+            }
+            else
+            {
+                return content;
+            }
         }
 
         private static Post FromItemElement(XElement element, string[] allAttachments)
