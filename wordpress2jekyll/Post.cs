@@ -197,6 +197,7 @@ namespace wordpress2jekyll
             var tags = from e in element.Elements("category")
                        where e.Attribute("domain").Value == "post_tag"
                        select e.Value;
+            var comments = element.Elements(WP + "comment");
             var encoded = element.Element(CONTENT + "encoded").Value;
             var truncatedLink = new Uri(link).AbsolutePath;
 
