@@ -11,10 +11,10 @@ namespace wordpress2jekyll
     {
         static void Main(string[] args)
         {
-            ImportAsync("export.zip", "jekyll.zip").Wait();
+            ImportAsync("export.zip", "jekyll.zip", 2).Wait();
         }
 
-        private static async Task ImportAsync(string exportZipFilePath, string jekyllZipFilePath)
+        private static async Task ImportAsync(string exportZipFilePath, string jekyllZipFilePath, int? maxPostCount)
         {
             try
             {
@@ -32,7 +32,7 @@ namespace wordpress2jekyll
                     foreach (var entry in xmlEntries)
                     {
                         Console.WriteLine($"Opening '{entry.FullName}'...");
-                        await ImportEntryAsync(entry, jekyllArchive);
+                        maxPostCount = await ImportXmlEntryAsync(entry, jekyllArchive, maxPostCount);
                     }
                 }
             }
@@ -42,7 +42,7 @@ namespace wordpress2jekyll
             }
         }
 
-        private static async Task ImportEntryAsync(ZipArchiveEntry entry, ZipArchive jekyllArchive)
+        private static async Task<int?> ImportXmlEntryAsync(ZipArchiveEntry entry, ZipArchive jekyllArchive, int? maxPostCount)
         {
             using (var stream = entry.Open())
             {
@@ -52,9 +52,22 @@ namespace wordpress2jekyll
 
                 foreach (var post in posts)
                 {
+                    if (maxPostCount != null)
+                    {   //  This is for tests only, in order to minimize # of downloads of assets
+                        if (maxPostCount > 0)
+                        {
+                            --maxPostCount;
+                        }
+                        else
+                        {
+                            return 0;
+                        }
+                    }
                     await ImportPostAsync(post, jekyllArchive);
                 }
             }
+
+            return maxPostCount;
         }
 
         private static async Task ImportPostAsync(Post post, ZipArchive jekyllArchive)
