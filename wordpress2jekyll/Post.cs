@@ -20,12 +20,16 @@ namespace wordpress2jekyll
             string title,
             string link,
             DateTime publicationDate,
+            IEnumerable<string> categories,
+            IEnumerable<string> tags,
             string content,
             string[] allAttachments)
         {
             Title = title;
             Link = link;
             PublicationDate = publicationDate;
+            Categories = categories.ToImmutableArray();
+            Tags = tags.ToImmutableArray();
             Assets = ExtractAssets(content, allAttachments, link, publicationDate);
             Content = ComputeContent(content, Assets);
         }
@@ -35,6 +39,10 @@ namespace wordpress2jekyll
         public string Link { get; }
 
         public DateTime PublicationDate { get; }
+
+        public IImmutableList<string> Categories { get; }
+
+        public IImmutableList<string> Tags { get; }
 
         public string FilePath
         {
@@ -50,6 +58,53 @@ namespace wordpress2jekyll
         }
 
         public string Content { get; }
+
+        public string ContentWithFrontMatter
+        {
+            get
+            {
+                var builder = new StringBuilder();
+
+                builder.AppendLine("---");
+                builder.Append("title:  ");
+                builder.AppendLine(Title);
+                builder.Append("date:  ");
+                builder.AppendLine(PublicationDate.ToString());
+                builder.Append("permalink:  \"");
+                builder.Append(Link);
+                builder.AppendLine("\"");
+                if (Categories.Any())
+                {
+                    builder.AppendLine("categories:");
+                    foreach (var c in Categories)
+                    {
+                        builder.Append("- ");
+                        builder.AppendLine(c);
+                    }
+                }
+                else
+                {
+                    builder.AppendLine("categories:  []");
+                }
+                if (Tags.Any())
+                {
+                    builder.AppendLine("tags:");
+                    foreach (var t in Tags)
+                    {
+                        builder.Append("- ");
+                        builder.AppendLine(t);
+                    }
+                }
+                else
+                {
+                    builder.AppendLine("tags:  []");
+                }
+                builder.AppendLine("---");
+                builder.Append(Content);
+
+                return builder.ToString();
+            }
+        }
 
         public Asset[] Assets { get; }
 
@@ -117,7 +172,7 @@ namespace wordpress2jekyll
             {
                 var builder = new StringBuilder(content);
 
-                foreach(var asset in assets)
+                foreach (var asset in assets)
                 {
                     builder.Replace(asset.SourceUri.ToString(), asset.FilePath);
                 }
@@ -136,10 +191,16 @@ namespace wordpress2jekyll
             var link = element.Element("link").Value;
             var pubDateText = element.Element("pubDate").Value;
             var pubDate = DateTime.Parse(pubDateText);
+            var categories = from e in element.Elements("category")
+                             where e.Attribute("domain").Value == "category"
+                             select e.Value;
+            var tags = from e in element.Elements("category")
+                       where e.Attribute("domain").Value == "post_tag"
+                       select e.Value;
             var encoded = element.Element(CONTENT + "encoded").Value;
             var truncatedLink = new Uri(link).AbsolutePath;
 
-            return new Post(title, truncatedLink, pubDate, encoded, allAttachments);
+            return new Post(title, truncatedLink, pubDate, categories, tags, encoded, allAttachments);
         }
     }
 }
