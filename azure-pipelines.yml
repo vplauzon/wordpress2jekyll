@@ -10,6 +10,8 @@ resources:
 
 variables:
   tag: '$(Build.BuildId)'
+  image-name:  vplauzon/wordpress2jekyll
+  docker-registry-endpoint:  'vplauzon-docker-hub'
 
 stages:
 - stage: Build
@@ -20,10 +22,20 @@ stages:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
+    - script: dotnet test **/*test -c release
+      displayName: 'Test'
+    - script: dotnet publish wordpress2jekyll -c release -o app
+      displayName: 'Build / Publish wordpress2jekyll'
     - task: Docker@2
       displayName: Build an image
       inputs:
         command: build
-        dockerfile: '**/Dockerfile'
-        tags: |
-          $(tag)
+        dockerfile: 'wordpress2jekyll/Dockerfile'
+        imageName: '$(image-name):$(tag)'
+    - task: Docker@2
+      displayName: 'Push Docker image'
+      inputs:
+        containerregistrytype: 'Container Registry'
+        dockerRegistryEndpoint: '$(docker-registry-endpoint)'
+        command: 'Push an image'
+        imageName: '$(image-name):$(tag)'
