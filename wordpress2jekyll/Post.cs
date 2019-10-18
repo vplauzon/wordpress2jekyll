@@ -14,6 +14,7 @@ namespace wordpress2jekyll
 {
     internal class Post
     {
+        private const string DATE_FORMAT = "yyyy-MM-dd HH:mm:ss zzz";
         private static readonly XNamespace WP = XNamespace.Get("http://wordpress.org/export/1.2/");
         private static readonly XNamespace CONTENT = XNamespace.Get("http://purl.org/rss/1.0/modules/content/");
 
@@ -83,7 +84,7 @@ namespace wordpress2jekyll
                 builder.Append("title:  ");
                 builder.AppendLine(Title);
                 builder.Append("date:  ");
-                builder.AppendLine(PublicationDate.ToString());
+                builder.AppendLine(PublicationDate.ToString(DATE_FORMAT));
                 builder.Append("permalink:  \"");
                 builder.Append(Link);
                 builder.AppendLine("\"");
