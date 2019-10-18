@@ -16,20 +16,20 @@ namespace wordpress2jekyll
 
             Console.WriteLine("Wordpress 2 Jekyll converter");
 
-            if (args.Length != 2)
+            if (args.Length < 2)
             {
                 Console.WriteLine("There should be 2 arguments for this process:  input file and output file");
+                Console.WriteLine("There is also an optional switch:  --no-image=true/false");
             }
             else
             {
-                var input = args[0];
-                var output = args[1];
+                var (input, output, doImages) = GetArguments(args);
 
                 Console.WriteLine($"Input:  {input}");
                 Console.WriteLine($"Output:  {output}");
                 Console.WriteLine();
 
-                ImportAsync(input, output, null).Wait();
+                ImportAsync(input, output, doImages).Wait();
 
                 Console.WriteLine();
                 Console.WriteLine($"Done.  Output written at {output}");
@@ -37,10 +37,40 @@ namespace wordpress2jekyll
             }
         }
 
+        private static (string input, string output, bool doImages) GetArguments(string[] args)
+        {
+            if (args[0].StartsWith("--do-images="))
+            {
+                if (args.Length != 3)
+                {
+                    throw new NotSupportedException(
+                        "Since first argument is '--do-images', there should be 2 more arguments");
+                }
+                else
+                {
+                    var doImages = bool.Parse(args[0].Substring("--do-images=".Length));
+
+                    return (args[1], args[2], doImages);
+                }
+            }
+            else
+            {
+                if (args.Length != 2)
+                {
+                    throw new NotSupportedException(
+                        "Since first argument isn't '--do-images', there should be only 2 arguments");
+                }
+                else
+                {
+                    return (args[0], args[1], true);
+                }
+            }
+        }
+
         private static async Task ImportAsync(
             string exportZipFilePath,
             string jekyllZipFilePath,
-            int? maxPostCount = null)
+            bool doImages)
         {
             try
             {
@@ -58,7 +88,7 @@ namespace wordpress2jekyll
                     foreach (var entry in xmlEntries)
                     {
                         Console.WriteLine($"Opening '{entry.FullName}'...");
-                        maxPostCount = await ImportXmlEntryAsync(entry, jekyllArchive, maxPostCount);
+                        await ImportXmlEntryAsync(entry, jekyllArchive, doImages);
                     }
                 }
             }
@@ -68,7 +98,10 @@ namespace wordpress2jekyll
             }
         }
 
-        private static async Task<int?> ImportXmlEntryAsync(ZipArchiveEntry entry, ZipArchive jekyllArchive, int? maxPostCount)
+        private static async Task ImportXmlEntryAsync(
+            ZipArchiveEntry entry,
+            ZipArchive jekyllArchive,
+            bool doImages)
         {
             using (var stream = entry.Open())
             {
@@ -78,25 +111,12 @@ namespace wordpress2jekyll
 
                 foreach (var post in posts)
                 {
-                    if (maxPostCount != null)
-                    {   //  This is for tests only, in order to minimize # of downloads of assets
-                        if (maxPostCount > 0)
-                        {
-                            --maxPostCount;
-                        }
-                        else
-                        {
-                            return 0;
-                        }
-                    }
-                    await ImportPostAsync(post, jekyllArchive);
+                    await ImportPostAsync(post, jekyllArchive, doImages);
                 }
             }
-
-            return maxPostCount;
         }
 
-        private static async Task ImportPostAsync(Post post, ZipArchive jekyllArchive)
+        private static async Task ImportPostAsync(Post post, ZipArchive jekyllArchive, bool doImages)
         {
             Console.WriteLine($"  Processing {post.FilePath}...");
 
@@ -104,7 +124,9 @@ namespace wordpress2jekyll
                                let task = a.GetBytesAsync()
                                orderby a.FilePath descending
                                select new { Task = task, Asset = a };
-            var assetStack = ImmutableStack.Create(assetBundles.ToArray());
+            var assetStack = doImages
+                ? ImmutableStack.Create(assetBundles.ToArray())
+                : ImmutableStack.Create(assetBundles.Take(0).ToArray());
 
             await WriteToArchiveAsync(jekyllArchive, post.FilePath, post.ContentWithFrontMatter);
 

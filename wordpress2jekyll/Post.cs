@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -35,7 +36,7 @@ namespace wordpress2jekyll
             Tags = tags.ToImmutableArray();
             Assets = ExtractAssets(content, allAttachments, link, publicationDate);
             Comments = comments.ToImmutableArray();
-            Content = ComputeContent(content, Assets);
+            Content = RenderContent(content, Assets);
         }
 
         public string Title { get; }
@@ -194,7 +195,14 @@ namespace wordpress2jekyll
             return assets.ToImmutableArray();
         }
 
-        private static string ComputeContent(string content, IImmutableList<Asset> assets)
+        private static string RenderContent(string content, IImmutableList<Asset> assets)
+        {
+            content = RenderAssetInContent(content, assets);
+
+            return content;
+        }
+
+        private static string RenderAssetInContent(string content, IImmutableList<Asset> assets)
         {
             if (assets.Any())
             {

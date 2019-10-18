@@ -10,6 +10,7 @@ COPY app .
 #	Define environment variables
 ENV INPUT_PATH "input-not-set"
 ENV OUTPUT_PATH "output-not-set"
+ENV DO_IMAGES "true"
 
 #	Run console app
-CMD ["sh", "-c", "dotnet wordpress2jekyll.dll ${INPUT_PATH} ${OUTPUT_PATH}"]
+CMD ["sh", "-c", "dotnet wordpress2jekyll.dll --do-images=${DO_IMAGES} ${INPUT_PATH} ${OUTPUT_PATH}"]
