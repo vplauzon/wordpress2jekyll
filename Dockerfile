@@ -8,8 +8,8 @@ WORKDIR /work
 COPY app .
 
 #	Define environment variables
-ENV INPUT_PATH ""
-ENV OUTPUT_PATH ""
+ENV INPUT_PATH "input-not-set"
+ENV OUTPUT_PATH "output-not-set"
 
 #	Run console app
-ENTRYPOINT ["dotnet", "wordpress2jekyll.dll", "${INPUT_PATH}", "${OUTPUT_PATH}"]
+ENTRYPOINT ["dotnet", "wordpress2jekyll.dll", "$INPUT_PATH", "$OUTPUT_PATH"]
