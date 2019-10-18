@@ -25,10 +25,16 @@ stages:
     - script: dotnet publish wordpress2jekyll -c release -o app
       displayName: 'Build / Publish wordpress2jekyll'
     - task: Docker@2
-      displayName: Build an image
+      displayName: Build image
       inputs:
-        containerRegistry: '$(docker-registry-endpoint)'
         repository: '$(image-name)'
         command: 'build'
         Dockerfile: '**/Dockerfile'
+        tags: '$(tag)'
+    - task: Docker@2
+      displayName: Push image
+      inputs:
+        containerRegistry: '$(docker-registry-endpoint)'
+        repository: '$(image-name)'
+        command: 'push'
         tags: '$(tag)'
