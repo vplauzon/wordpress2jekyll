@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,7 +23,8 @@ namespace wordpress2jekyll
             IEnumerable<string> categories,
             IEnumerable<string> tags,
             string content,
-            string[] allAttachments)
+            string[] allAttachments,
+            IEnumerable<Comment> comments)
         {
             Title = title;
             Link = link;
@@ -32,6 +32,7 @@ namespace wordpress2jekyll
             Categories = categories.ToImmutableArray();
             Tags = tags.ToImmutableArray();
             Assets = ExtractAssets(content, allAttachments, link, publicationDate);
+            Comments = comments.ToImmutableArray();
             Content = ComputeContent(content, Assets);
         }
 
@@ -107,7 +108,9 @@ namespace wordpress2jekyll
             }
         }
 
-        public Asset[] Assets { get; }
+        public IImmutableList<Asset> Assets { get; }
+
+        public IImmutableList<Comment> Comments { get; }
 
         public static async Task<Post[]> LoadPublishedAsync(Stream stream)
         {
@@ -133,7 +136,7 @@ namespace wordpress2jekyll
             return posts.ToArray();
         }
 
-        private static Asset[] ExtractAssets(
+        private static IImmutableList<Asset> ExtractAssets(
             string content,
             string[] allAttachments,
             string postLink,
@@ -164,10 +167,10 @@ namespace wordpress2jekyll
                 assets = assets.Add(asset);
             }
 
-            return assets.ToArray();
+            return assets.ToImmutableArray();
         }
 
-        private static string ComputeContent(string content, Asset[] assets)
+        private static string ComputeContent(string content, IImmutableList<Asset> assets)
         {
             if (assets.Any())
             {
@@ -209,7 +212,7 @@ namespace wordpress2jekyll
             var encoded = element.Element(CONTENT + "encoded").Value;
             var truncatedLink = new Uri(link).AbsolutePath;
 
-            return new Post(title, truncatedLink, pubDate, categories, tags, encoded, allAttachments);
+            return new Post(title, truncatedLink, pubDate, categories, tags, encoded, allAttachments, comments);
         }
     }
 }
