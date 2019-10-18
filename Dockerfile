@@ -12,4 +12,4 @@ ENV INPUT_PATH "input-not-set"
 ENV OUTPUT_PATH "output-not-set"
 
 #	Run console app
-CMD ["dotnet", "wordpress2jekyll.dll", "$INPUT_PATH", "$OUTPUT_PATH"]
+CMD ["dotnet", "wordpress2jekyll.dll", "${INPUT_PATH}", "${OUTPUT_PATH}"]
