@@ -22,8 +22,6 @@ stages:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-    - script: dotnet test **/*test -c release
-      displayName: 'Test'
     - script: dotnet publish wordpress2jekyll -c release -o app
       displayName: 'Build / Publish wordpress2jekyll'
     - task: Docker@2
