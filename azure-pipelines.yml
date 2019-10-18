@@ -28,7 +28,7 @@ stages:
       displayName: Build an image
       inputs:
         command: build
-        dockerfile: 'wordpress2jekyll/Dockerfile'
+        dockerfile: 'Dockerfile'
         imageName: '$(image-name):$(tag)'
     - task: Docker@2
       displayName: 'Push Docker image'
