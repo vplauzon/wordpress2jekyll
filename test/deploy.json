@@ -12,7 +12,7 @@
     },
     "variables": {
         "Share Name": "import",
-        "Container Image": "vplauzon/wordpress2jekyll:631"
+        "Container Image": "vplauzon/wordpress2jekyll:632"
     },
     "resources": [
         {
@@ -78,6 +78,7 @@
                         }
                     }
                 ],
+                "restartPolicy": "OnFailure",
                 "osType": "Linux",
                 "volumes": [
                     {

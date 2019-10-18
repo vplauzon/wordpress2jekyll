@@ -115,6 +115,7 @@ namespace wordpress2jekyll
 
             if (post.Comments.Any())
             {
+                Console.WriteLine($"    Writing comments...");
                 await WriteToArchiveAsync(jekyllArchive, post.CommentsPath, post.CommentsAsYaml);
             }
         }
