@@ -11,7 +11,17 @@ namespace wordpress2jekyll
     {
         static void Main(string[] args)
         {
-            ImportAsync("export.zip", "jekyll.zip", null).Wait();
+            if (args.Length != 2)
+            {
+                Console.WriteLine("There should be 2 arguments for this process:  input file and output file");
+            }
+            else
+            {
+                var input = args[0];
+                var output = args[1];
+
+                ImportAsync(input, output, null).Wait();
+            }
         }
 
         private static async Task ImportAsync(
@@ -77,25 +87,25 @@ namespace wordpress2jekyll
         {
             Console.WriteLine($"  Processing {post.FilePath}...");
 
-            //var assetBundles = from a in post.Assets
-            //              let task = a.GetBytesAsync()
-            //              orderby a.FilePath descending
-            //              select new { Task = task, Asset = a };
-            //var assetStack = ImmutableStack.Create(assetBundles.ToArray());
+            var assetBundles = from a in post.Assets
+                               let task = a.GetBytesAsync()
+                               orderby a.FilePath descending
+                               select new { Task = task, Asset = a };
+            var assetStack = ImmutableStack.Create(assetBundles.ToArray());
 
             await WriteToArchiveAsync(jekyllArchive, post.FilePath, post.ContentWithFrontMatter);
 
-            //while (!assetStack.IsEmpty)
-            //{
-            //    var bundle = assetStack.Peek();
-            //    var content = await bundle.Task;
+            while (!assetStack.IsEmpty)
+            {
+                var bundle = assetStack.Peek();
+                var content = await bundle.Task;
 
-            //    var asset = bundle.Asset;
+                var asset = bundle.Asset;
 
-            //    Console.WriteLine($"    Writing {asset.SourceUri}...");
-            //    await WriteToArchiveAsync(jekyllArchive, asset.FilePath, content);
-            //    assetStack = assetStack.Pop();
-            //}
+                Console.WriteLine($"    Writing {asset.SourceUri}...");
+                await WriteToArchiveAsync(jekyllArchive, asset.FilePath, content);
+                assetStack = assetStack.Pop();
+            }
 
             if (post.Comments.Any())
             {
