@@ -31,4 +31,4 @@ stages:
         repository: '$(image-name)'
         command: 'build'
         Dockerfile: '**/Dockerfile'
-        arguments: '$(tag)'
+        tags: '$(tag)'
