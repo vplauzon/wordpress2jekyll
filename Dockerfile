@@ -12,4 +12,4 @@ ENV INPUT_PATH ""
 ENV OUTPUT_PATH ""
 
 #	Run console app
-CMD ["dotnet", "wordpress2jekyll.dll", "${INPUT_PATH}", "${OUTPUT_PATH}"]
+ENTRYPOINT ["dotnet", "wordpress2jekyll.dll", "${INPUT_PATH}", "${OUTPUT_PATH}"]

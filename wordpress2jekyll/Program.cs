@@ -11,6 +11,8 @@ namespace wordpress2jekyll
     {
         static void Main(string[] args)
         {
+            Console.WriteLine("Wordpress 2 Jekyll converter");
+
             if (args.Length != 2)
             {
                 Console.WriteLine("There should be 2 arguments for this process:  input file and output file");
@@ -19,6 +21,10 @@ namespace wordpress2jekyll
             {
                 var input = args[0];
                 var output = args[1];
+
+                Console.WriteLine($"Input:  {input}");
+                Console.WriteLine($"Output:  {output}");
+                Console.WriteLine();
 
                 ImportAsync(input, output, null).Wait();
             }

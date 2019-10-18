@@ -11,6 +11,8 @@
         }
     },
     "variables": {
+        "Share Name": "import",
+        "Container Image": "vplauzon/wordpress2jekyll:626"
     },
     "resources": [
         {
@@ -28,14 +30,72 @@
         {
             "apiVersion": "2019-04-01",
             "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
-            "name": "[concat(parameters('storageAccountName'), '/default/import')]",
-            "dependsOn":[
+            "name": "[concat(parameters('storageAccountName'), '/default/', variables('Share Name'))]",
+            "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
             ],
             "properties": {
             }
+        },
+        {
+            "apiVersion": "2018-10-01",
+            "type": "Microsoft.ContainerInstance/containerGroups",
+            "name": "file-share-demo",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/fileServices/shares', parameters('storageAccountName'), 'default', variables('Share Name'))]"
+            ],
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "containers": [
+                    {
+                        "name": "converter",
+                        "properties": {
+                            "image": "[variables('Container Image')]",
+                            "resources": {
+                                "requests": {
+                                    "cpu": 1,
+                                    "memoryInGb": 1.5
+                                }
+                            },
+                            "ports": [
+                            ],
+                            "environmentVariables": [
+                                {
+                                    "name": "INPUT_PATH",
+                                    "value": "/files/export.zip"
+                                },
+                                {
+                                    "name": "OUTPUT_PATH",
+                                    "value": "/files/conversion.zip"
+                                }
+                            ],
+                            "volumeMounts": [
+                                {
+                                    "name": "filesharevolume",
+                                    "mountPath": "/files"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "osType": "Linux",
+                "volumes": [
+                    {
+                        "name": "filesharevolume",
+                        "azureFile": {
+                            "shareName": "[variables('Share Name')]",
+                            "storageAccountName": "[parameters('storageAccountName')]",
+                            "storageAccountKey": "[listKeys(parameters('storageAccountName'), '2019-04-01').keys[0].value]"
+                        }
+                    }
+                ]
+            }
         }
     ],
     "outputs": {
+        "key": {
+            "type": "string",
+            "value": "[listKeys(parameters('storageAccountName'), '2019-04-01').keys[0].value]"
+        }
     }
 }
