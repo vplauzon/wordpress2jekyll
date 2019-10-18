@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace wordpress2jekyll
@@ -11,6 +12,8 @@ namespace wordpress2jekyll
     {
         static void Main(string[] args)
         {
+            ServicePointManager.DefaultConnectionLimit = 5;
+
             Console.WriteLine("Wordpress 2 Jekyll converter");
 
             if (args.Length != 2)
