@@ -27,13 +27,8 @@ stages:
     - task: Docker@2
       displayName: Build an image
       inputs:
-        command: build
-        dockerfile: 'Dockerfile'
-        imageName: '$(image-name):$(tag)'
-    - task: Docker@2
-      displayName: 'Push Docker image'
-      inputs:
-        containerregistrytype: 'Container Registry'
-        dockerRegistryEndpoint: '$(docker-registry-endpoint)'
-        command: 'Push an image'
-        imageName: '$(image-name):$(tag)'
+        containerRegistry: '$(docker-registry-endpoint)'
+        repository: '$(image-name)'
+        command: 'build'
+        Dockerfile: '**/Dockerfile'
+        arguments: '$(tag)'
