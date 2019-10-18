@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -197,7 +198,14 @@ namespace wordpress2jekyll
             var tags = from e in element.Elements("category")
                        where e.Attribute("domain").Value == "post_tag"
                        select e.Value;
-            var comments = element.Elements(WP + "comment");
+            //  wp:, wp:comment_content, wp:comment_date_gmt, wp:comment_author_IP
+            var comments = from e in element.Elements(WP + "comment")
+                           let author = e.Element(WP + "comment_author").Value
+                           let authorIp = e.Element(WP + "comment_author_IP").Value
+                           let content = e.Element(WP + "comment_content").Value
+                           let dateGmt = e.Element(WP + "comment_date_gmt").Value
+                           let date = DateTime.Parse(dateGmt, null, DateTimeStyles.AssumeUniversal)
+                           select new Comment(author, authorIp, date, content);
             var encoded = element.Element(CONTENT + "encoded").Value;
             var truncatedLink = new Uri(link).AbsolutePath;
 
