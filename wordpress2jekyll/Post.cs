@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using YamlDotNet.Serialization;
 
 namespace wordpress2jekyll
 {
@@ -54,6 +55,17 @@ namespace wordpress2jekyll
                 var parts = Link.Split('/').Skip(1).Reverse().Skip(1).Reverse();
                 var name = string.Join('-', parts) + ".md";
                 var path = $"_posts/{PublicationDate.Year}/{PublicationDate.Month}/{name}";
+
+                return path;
+            }
+        }
+
+        public string CommentsPath
+        {
+            get
+            {
+                var postName = Path.GetFileNameWithoutExtension(FilePath);
+                var path = $"_data/{PublicationDate.Year}/{PublicationDate.Month}/{postName}/comments.yaml";
 
                 return path;
             }
@@ -111,6 +123,17 @@ namespace wordpress2jekyll
         public IImmutableList<Asset> Assets { get; }
 
         public IImmutableList<Comment> Comments { get; }
+
+        public string CommentsAsYaml
+        {
+            get
+            {
+                var serializer = new Serializer();
+                var yaml = serializer.Serialize(Comments);
+
+                return yaml;
+            }
+        }
 
         public static async Task<Post[]> LoadPublishedAsync(Stream stream)
         {

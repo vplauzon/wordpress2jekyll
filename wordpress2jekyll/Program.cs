@@ -77,25 +77,30 @@ namespace wordpress2jekyll
         {
             Console.WriteLine($"  Processing {post.FilePath}...");
 
-            //var bundles = from a in post.Assets
+            //var assetBundles = from a in post.Assets
             //              let task = a.GetBytesAsync()
             //              orderby a.FilePath descending
             //              select new { Task = task, Asset = a };
-            //var bundleStack = ImmutableStack.Create(bundles.ToArray());
+            //var assetStack = ImmutableStack.Create(assetBundles.ToArray());
 
             await WriteToArchiveAsync(jekyllArchive, post.FilePath, post.ContentWithFrontMatter);
 
-            //while (!bundleStack.IsEmpty)
+            //while (!assetStack.IsEmpty)
             //{
-            //    var bundle = bundleStack.Peek();
+            //    var bundle = assetStack.Peek();
             //    var content = await bundle.Task;
 
             //    var asset = bundle.Asset;
 
             //    Console.WriteLine($"    Writing {asset.SourceUri}...");
             //    await WriteToArchiveAsync(jekyllArchive, asset.FilePath, content);
-            //    bundleStack = bundleStack.Pop();
+            //    assetStack = assetStack.Pop();
             //}
+
+            if (post.Comments.Any())
+            {
+                await WriteToArchiveAsync(jekyllArchive, post.CommentsPath, post.CommentsAsYaml);
+            }
         }
 
         private static async Task WriteToArchiveAsync(ZipArchive archive, string path, string content)
