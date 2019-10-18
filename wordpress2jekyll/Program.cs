@@ -27,6 +27,10 @@ namespace wordpress2jekyll
                 Console.WriteLine();
 
                 ImportAsync(input, output, null).Wait();
+
+                Console.WriteLine();
+                Console.WriteLine($"Done.  Output written at {output}");
+                Console.WriteLine();
             }
         }
 
