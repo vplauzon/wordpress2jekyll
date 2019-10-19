@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -18,6 +19,12 @@ namespace wordpress2jekyll
         private const string DATE_FORMAT = "yyyy-MM-dd HH:mm:ss zzz";
         private static readonly XNamespace WP = XNamespace.Get("http://wordpress.org/export/1.2/");
         private static readonly XNamespace CONTENT = XNamespace.Get("http://purl.org/rss/1.0/modules/content/");
+        private static readonly Regex CODE_REGEX = new Regex(
+            @"\[code\s*(lang\s*=\s*(\w*))?\s*\]",
+            RegexOptions.Singleline | RegexOptions.Compiled);
+        private static readonly Regex CLOSING_CODE_REGEX = new Regex(
+            @"\[\/code\s*\]",
+            RegexOptions.Singleline | RegexOptions.Compiled);
 
         private Post(
             string title,
@@ -198,8 +205,62 @@ namespace wordpress2jekyll
         private static string RenderContent(string content, IImmutableList<Asset> assets)
         {
             content = RenderAssetInContent(content, assets);
+            content = SubstituteWordpressCodeBlockInContent(content);
 
             return content;
+        }
+
+        private static string SubstituteWordpressCodeBlockInContent(string content)
+        {
+            var builder = new StringBuilder(content.Length);
+
+            do
+            {
+                var codeMatch = CODE_REGEX.Match(content);
+
+                if (codeMatch.Success)
+                {
+                    var afterCode = content.Substring(codeMatch.Index + codeMatch.Length);
+                    var afterCodeMatch = CLOSING_CODE_REGEX.Match(afterCode);
+
+                    if (afterCodeMatch.Success)
+                    {
+                        var code =
+                            WebUtility.HtmlDecode(afterCode.Substring(0, afterCodeMatch.Index));
+                        var remain = afterCode.Substring(code.Length + afterCodeMatch.Length);
+
+                        //  Get everything before the code block
+                        builder.Append(content.Substring(0, codeMatch.Index));
+                        //  e.g. ```csharp
+                        builder.Append("```");
+                        if (codeMatch.Groups[1].Success)
+                        {
+                            builder.Append(codeMatch.Groups[2].Value);
+                        }
+                        //  In between code
+                        builder.Append(code);
+                        //  ```
+                        builder.Append("```");
+                        content = remain;
+                    }
+                    else
+                    {   //  This case is when there is an opening [code] by itself
+                        builder.Append(codeMatch.Value);
+                        content = afterCode;
+                    }
+                }
+                else if (builder.Length == 0)
+                {
+                    return content;
+                }
+                else
+                {
+                    builder.Append(content);
+
+                    return builder.ToString();
+                }
+            }
+            while (true);
         }
 
         private static string RenderAssetInContent(string content, IImmutableList<Asset> assets)
