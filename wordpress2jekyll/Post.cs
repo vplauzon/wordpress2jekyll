@@ -34,7 +34,7 @@ namespace wordpress2jekyll
             IEnumerable<string> categories,
             IEnumerable<string> tags,
             string content,
-            string[] allAttachments,
+            IImmutableList<string> allAttachments,
             IImmutableList<Comment> comments)
         {
             Title = title;
@@ -151,13 +151,20 @@ namespace wordpress2jekyll
             var statusName = WP + "status";
             var postTypeName = WP + "post_type";
             var items = document.Root.Elements().Elements("item");
-            var allAttachments = (from i in items
-                                  let postType = i.Element(postTypeName)
-                                  where postType != null
-                                  && postType.Value == "attachment"
-                                  let url = i.Element(WP + "attachment_url").Value
-                                  orderby url
-                                  select url).ToArray();
+            var attachments = from i in items
+                              let postType = i.Element(postTypeName)
+                              where postType != null
+                              && postType.Value == "attachment"
+                              let url = i.Element(WP + "attachment_url").Value
+                              orderby url
+                              select url;
+            var alternateAttachments = from a in attachments
+                                       let alternate = new Uri(a).Scheme == "http"
+                                       ? a.Insert(4, "s")
+                                       : a.Remove(4, 1)
+                                       select alternate;
+            var allAttachments =
+                attachments.Concat(alternateAttachments).OrderBy(a => a).ToImmutableArray();
             var posts = from i in items
                         let status = i.Element(statusName)
                         let postType = i.Element(postTypeName)
@@ -172,7 +179,7 @@ namespace wordpress2jekyll
 
         private static IImmutableList<Asset> ExtractAssets(
             string content,
-            string[] allAttachments,
+            IImmutableList<string> allAttachments,
             string postLink,
             DateTime publicationDate)
         {
@@ -330,7 +337,7 @@ namespace wordpress2jekyll
             }
         }
 
-        private static Post FromItemElement(XElement element, string[] allAttachments)
+        private static Post FromItemElement(XElement element, IImmutableList<string> allAttachments)
         {
             var title = element.Element("title").Value;
             var link = element.Element("link").Value;
