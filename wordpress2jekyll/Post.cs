@@ -214,7 +214,7 @@ namespace wordpress2jekyll
         {
             var builder = new StringBuilder(content.Length);
 
-            do
+            while (true)
             {
                 var codeMatch = CODE_REGEX.Match(content);
 
@@ -227,7 +227,8 @@ namespace wordpress2jekyll
                     {
                         var code =
                             WebUtility.HtmlDecode(afterCode.Substring(0, afterCodeMatch.Index));
-                        var remain = afterCode.Substring(code.Length + afterCodeMatch.Length);
+                        var remain =
+                            afterCode.Substring(afterCodeMatch.Index + afterCodeMatch.Length);
 
                         //  Get everything before the code block
                         builder.Append(content.Substring(0, codeMatch.Index));
@@ -260,7 +261,6 @@ namespace wordpress2jekyll
                     return builder.ToString();
                 }
             }
-            while (true);
         }
 
         private static string RenderAssetInContent(string content, IImmutableList<Asset> assets)
