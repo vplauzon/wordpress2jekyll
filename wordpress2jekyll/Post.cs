@@ -17,7 +17,6 @@ namespace wordpress2jekyll
     internal class Post
     {
         private const string DATE_FORMAT = "yyyy-MM-dd HH:mm:ss zzz";
-        private static readonly XNamespace WP = XNamespace.Get("http://wordpress.org/export/1.2/");
         private static readonly XNamespace CONTENT = XNamespace.Get("http://purl.org/rss/1.0/modules/content/");
         private static readonly Regex CODE_REGEX = new Regex(
             @"\[code\s*(lang\s*=\s*(\w*))?\s*\]",
@@ -25,6 +24,8 @@ namespace wordpress2jekyll
         private static readonly Regex CLOSING_CODE_REGEX = new Regex(
             @"\[\/code\s*\]",
             RegexOptions.Singleline | RegexOptions.Compiled);
+
+        internal static readonly XNamespace WP = XNamespace.Get("http://wordpress.org/export/1.2/");
 
         private Post(
             string title,
@@ -34,7 +35,7 @@ namespace wordpress2jekyll
             IEnumerable<string> tags,
             string content,
             string[] allAttachments,
-            IEnumerable<Comment> comments)
+            IImmutableList<Comment> comments)
         {
             Title = title;
             Link = link;
@@ -42,7 +43,7 @@ namespace wordpress2jekyll
             Categories = categories.ToImmutableArray();
             Tags = tags.ToImmutableArray();
             Assets = ExtractAssets(content, allAttachments, link, publicationDate);
-            Comments = comments.ToImmutableArray();
+            Comments = comments;
             Content = RenderContent(content, Assets);
         }
 
@@ -341,14 +342,7 @@ namespace wordpress2jekyll
             var tags = from e in element.Elements("category")
                        where e.Attribute("domain").Value == "post_tag"
                        select e.Value;
-            //  wp:, wp:comment_content, wp:comment_date_gmt, wp:comment_author_IP
-            var comments = from e in element.Elements(WP + "comment")
-                           let author = e.Element(WP + "comment_author").Value
-                           let authorIp = e.Element(WP + "comment_author_IP").Value
-                           let content = e.Element(WP + "comment_content").Value
-                           let dateGmt = e.Element(WP + "comment_date_gmt").Value
-                           let date = DateTime.Parse(dateGmt, null, DateTimeStyles.AssumeUniversal)
-                           select new Comment(author, authorIp, date, content);
+            var comments = Comment.FromElements(element.Elements(WP + "comment"));
             var encoded = element.Element(CONTENT + "encoded").Value;
             var truncatedLink = new Uri(link).AbsolutePath;
 
