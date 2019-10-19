@@ -27,6 +27,7 @@ namespace wordpress2jekyll
 
                 Console.WriteLine($"Input:  {input}");
                 Console.WriteLine($"Output:  {output}");
+                Console.WriteLine($"Do Images:  {doImages}");
                 Console.WriteLine();
 
                 ImportAsync(input, output, doImages).Wait();
