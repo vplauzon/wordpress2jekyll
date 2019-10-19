@@ -206,8 +206,54 @@ namespace wordpress2jekyll
         {
             content = RenderAssetInContent(content, assets);
             content = SubstituteWordpressCodeBlockInContent(content);
+            content = EscapeDoubleCurlyBraces(content);
 
             return content;
+        }
+
+        private static string EscapeDoubleCurlyBraces(string content)
+        {
+            var builder = new StringBuilder(content.Length);
+            var index = 0;
+
+            while (true)
+            {
+                var openingIndex = content.IndexOf("{{", index);
+
+                if (openingIndex != -1)
+                {
+                    var closingIndex = content.IndexOf("}}", openingIndex + 2);
+
+                    if (closingIndex != -1)
+                    {
+                        //  Add everything before {{
+                        builder.Append(content, index, openingIndex - index);
+                        //  Escape curly braces
+                        builder.Append("{% raw %}");
+                        //  Curly braces content itself
+                        builder.Append(content, openingIndex, closingIndex - openingIndex + 2);
+                        //  Escape curly braces
+                        builder.Append("{% endraw %}");
+                        //  Update index
+                        index = closingIndex + 2;
+                    }
+                    else
+                    {   //  This case is when there is an opening {{ by itself
+                        builder.Append(content, index, openingIndex + 2);
+                        index = openingIndex + 2;
+                    }
+                }
+                else if (builder.Length == 0)
+                {
+                    return content;
+                }
+                else
+                {
+                    builder.Append(content, index, content.Length - index);
+
+                    return builder.ToString();
+                }
+            }
         }
 
         private static string SubstituteWordpressCodeBlockInContent(string content)
