@@ -194,7 +194,7 @@ namespace wordpress2jekyll
                 assetNames = assetNames.Add(fileName);
 
                 var filePath =
-                    $"/assets/{publicationDate.Year}/{publicationDate.Month}/{postName}/{fileName}";
+                    $"assets/{publicationDate.Year}/{publicationDate.Month}/{postName}/{fileName}";
                 var asset = new Asset(uri, filePath);
 
                 assets = assets.Add(asset);
@@ -318,7 +318,7 @@ namespace wordpress2jekyll
 
                 foreach (var asset in assets)
                 {
-                    builder.Replace(asset.SourceUri.ToString(), asset.FilePath);
+                    builder.Replace(asset.SourceUri.ToString(), '/' + asset.FilePath);
                 }
 
                 return builder.ToString();

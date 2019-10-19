@@ -117,7 +117,10 @@ namespace wordpress2jekyll
             }
         }
 
-        private static async Task ImportPostAsync(Post post, ZipArchive jekyllArchive, bool doImages)
+        private static async Task ImportPostAsync(
+            Post post,
+            ZipArchive jekyllArchive,
+            bool doImages)
         {
             Console.WriteLine($"  Processing {post.FilePath}...");
 
