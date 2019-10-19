@@ -90,38 +90,19 @@ namespace wordpress2jekyll
                 var builder = new StringBuilder();
 
                 builder.AppendLine("---");
-                builder.Append("title:  ");
-                builder.AppendLine(Title);
-                builder.Append("date:  ");
-                builder.AppendLine(PublicationDate.ToString(DATE_FORMAT));
-                builder.Append("permalink:  \"");
-                builder.Append(Link);
-                builder.AppendLine("\"");
-                if (Categories.Any())
+                using (var writer = new StringWriter(builder))
                 {
-                    builder.AppendLine("categories:");
-                    foreach (var c in Categories)
+                    var metaData = new
                     {
-                        builder.Append("- ");
-                        builder.AppendLine(c);
-                    }
-                }
-                else
-                {
-                    builder.AppendLine("categories:  []");
-                }
-                if (Tags.Any())
-                {
-                    builder.AppendLine("tags:");
-                    foreach (var t in Tags)
-                    {
-                        builder.Append("- ");
-                        builder.AppendLine(t);
-                    }
-                }
-                else
-                {
-                    builder.AppendLine("tags:  []");
+                        title = Title,
+                        date = PublicationDate.ToString(DATE_FORMAT),
+                        permalink = Link,
+                        categories = Categories,
+                        tags = Tags,
+                    };
+                    var serializer = new Serializer();
+
+                    serializer.Serialize(writer, metaData);
                 }
                 builder.AppendLine("---");
                 builder.Append(Content);
