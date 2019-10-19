@@ -154,8 +154,9 @@ namespace wordpress2jekyll
                                   let postType = i.Element(postTypeName)
                                   where postType != null
                                   && postType.Value == "attachment"
-                                  let guid = i.Element("guid")
-                                  select guid.Value).ToArray();
+                                  let url = i.Element(WP + "attachment_url").Value
+                                  orderby url
+                                  select url).ToArray();
             var posts = from i in items
                         let status = i.Element(statusName)
                         let postType = i.Element(postTypeName)
@@ -193,7 +194,7 @@ namespace wordpress2jekyll
                 assetNames = assetNames.Add(fileName);
 
                 var filePath =
-                    $"assets/{publicationDate.Year}/{publicationDate.Month}/{postName}/{fileName}";
+                    $"/assets/{publicationDate.Year}/{publicationDate.Month}/{postName}/{fileName}";
                 var asset = new Asset(uri, filePath);
 
                 assets = assets.Add(asset);
@@ -229,11 +230,11 @@ namespace wordpress2jekyll
                         //  Add everything before {{
                         builder.Append(content, index, openingIndex - index);
                         //  Escape curly braces
-                        builder.Append("{% raw %}");
+                        builder.Append("{% raw %} ");
                         //  Curly braces content itself
                         builder.Append(content, openingIndex, closingIndex - openingIndex + 2);
                         //  Escape curly braces
-                        builder.Append("{% endraw %}");
+                        builder.Append(" {% endraw %}");
                         //  Update index
                         index = closingIndex + 2;
                     }

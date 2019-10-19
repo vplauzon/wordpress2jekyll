@@ -12,7 +12,7 @@
     },
     "variables": {
         "Share Name": "import",
-        "Container Image": "vplauzon/wordpress2jekyll:636"
+        "Container Image": "vplauzon/wordpress2jekyll:638"
     },
     "resources": [
         {
