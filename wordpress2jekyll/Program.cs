@@ -10,7 +10,7 @@ namespace wordpress2jekyll
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             ServicePointManager.DefaultConnectionLimit = 5;
 
@@ -30,7 +30,7 @@ namespace wordpress2jekyll
                 Console.WriteLine($"Do Images:  {doImages}");
                 Console.WriteLine();
 
-                ImportAsync(input, output, doImages).Wait();
+                await ImportAsync(input, output, doImages);
 
                 Console.WriteLine();
                 Console.WriteLine($"Done.  Output written at {output}");
@@ -148,8 +148,14 @@ namespace wordpress2jekyll
 
             if (post.Comments.Any())
             {
-                Console.WriteLine($"    Writing comments...");
-                await WriteToArchiveAsync(jekyllArchive, post.CommentsPath, post.CommentsAsYaml);
+                foreach (var comment in post.Comments)
+                {
+                    Console.WriteLine($"    Writing comment {comment.Id}");
+                    await WriteToArchiveAsync(
+                        jekyllArchive,
+                        $"{post.CommentsRoot}/{comment.Id}.yaml",
+                        comment.AsYaml());
+                }
             }
         }
 

@@ -70,12 +70,12 @@ namespace wordpress2jekyll
             }
         }
 
-        public string CommentsPath
+        public string CommentsRoot
         {
             get
             {
                 var postName = Path.GetFileNameWithoutExtension(FilePath);
-                var path = $"_data/{PublicationDate.Year}/{PublicationDate.Month}/{postName}/comments.yaml";
+                var path = $"_data/{PublicationDate.Year}/{PublicationDate.Month}/{postName}";
 
                 return path;
             }
@@ -114,17 +114,6 @@ namespace wordpress2jekyll
         public IImmutableList<Asset> Assets { get; }
 
         public IImmutableList<Comment> Comments { get; }
-
-        public string CommentsAsYaml
-        {
-            get
-            {
-                var serializer = new Serializer();
-                var yaml = serializer.Serialize(Comments);
-
-                return yaml;
-            }
-        }
 
         public static async Task<Post[]> LoadPublishedAsync(Stream stream)
         {
