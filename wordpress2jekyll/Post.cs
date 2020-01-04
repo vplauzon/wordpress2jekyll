@@ -75,7 +75,7 @@ namespace wordpress2jekyll
             get
             {
                 var postName = Path.GetFileNameWithoutExtension(FilePath);
-                var path = $"_data/{PublicationDate.Year}/{PublicationDate.Month}/{postName}";
+                var path = $"_data/{PublicationDate.Year}/{PublicationDate.Month}/{postName}/comments";
 
                 return path;
             }

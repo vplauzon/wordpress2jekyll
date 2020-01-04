@@ -19,7 +19,9 @@ namespace wordpress2jekyll
                            let authorUrl = e.Element(Post.WP + "comment_author_url").Value
                            let content = e.Element(Post.WP + "comment_content").Value
                            let dateGmt = e.Element(Post.WP + "comment_date_gmt").Value
+                           let commentType = e.Element(Post.WP + "comment_type").Value
                            let date = DateTime.Parse(dateGmt, null, DateTimeStyles.AssumeUniversal)
+                           where commentType != "pingback"
                            select new Comment(
                                id,
                                new Author(author, authorUrl),
