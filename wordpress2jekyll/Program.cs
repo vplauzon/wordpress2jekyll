@@ -122,7 +122,7 @@ namespace wordpress2jekyll
             ZipArchive jekyllArchive,
             bool doImages)
         {
-            Console.WriteLine($"  Processing {post.FilePath}...");
+            Console.WriteLine($"  Processing {post.PostPath}...");
 
             var assetBundles = from a in post.Assets
                                let task = a.GetBytesAsync()
@@ -132,7 +132,7 @@ namespace wordpress2jekyll
                 ? ImmutableStack.Create(assetBundles.ToArray())
                 : ImmutableStack.Create(assetBundles.Take(0).ToArray());
 
-            await WriteToArchiveAsync(jekyllArchive, post.FilePath, post.ContentWithFrontMatter);
+            await WriteToArchiveAsync(jekyllArchive, post.PostPath, post.ContentWithFrontMatter);
 
             while (!assetStack.IsEmpty)
             {

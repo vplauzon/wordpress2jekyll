@@ -37,12 +37,29 @@ namespace wordpress2jekyll
             IImmutableList<string> allAttachments,
             IImmutableList<Comment> comments)
         {
+            //  Remove leading and trailing slash
+            var parts = link.Split('/').Skip(1).Reverse().Skip(1).Reverse().ToArray();
+
+            if (parts.Length != 4)
+            {
+                throw new ArgumentException(nameof(link));
+            }
+
+            var year = parts[0];
+            var month = int.Parse(parts[1]);
+            var quarter = (byte)((month - 1) / 3 + 1);
+            var name = parts[3];
+
             Title = title;
             Link = link;
             PublicationDate = publicationDate;
+            PostPath = $"_posts/{year}/{quarter}/{publicationDate.Year}-"
+                + $"{publicationDate.Month,0:D2}-{publicationDate.Day,0:D2}-{name}.md";
+            CommentsRoot = $"_data/{year}/{quarter}/{name}/comments";
+            AssetsRoot = $"assets/posts/{year}/{quarter}/{name}";
             Categories = categories.ToImmutableArray();
             Tags = tags.ToImmutableArray();
-            Assets = ExtractAssets(content, allAttachments, link, SubFolder);
+            Assets = ExtractAssets(content, allAttachments, link, AssetsRoot);
             Comments = comments;
             Content = RenderContent(content, Assets);
         }
@@ -57,49 +74,11 @@ namespace wordpress2jekyll
 
         public IImmutableList<string> Tags { get; }
 
-        public string SubFolder
-        {
-            get
-            {
-                //  Remove leading and trailing slash
-                var parts = Link.Split('/').Skip(1).Reverse().Skip(1).Reverse().ToArray();
+        public string PostPath { get; }
 
-                if (parts.Length != 4)
-                {
-                    throw new ArgumentException(nameof(Link));
-                }
-
-                var year = parts[0];
-                var month = int.Parse(parts[1]);
-                //  Quarter of the year
-                //  Month 1-3:  First quarter.  Month 4-6:  Second quarter.  Etc.
-                var quarter = (byte)((month - 1) / 3 + 1);
-                var name = parts[3];
-                var folder = $"{year,0:D2}/{quarter}/{name}";
-
-                return folder;
-            }
-        }
-
-        public string FilePath
-        {
-            get
-            {
-                var path = $"_posts/{SubFolder}.md";
-
-                return path;
-            }
-        }
-
-        public string CommentsRoot
-        {
-            get
-            {
-                var path = $"_data/{SubFolder}/comments";
-
-                return path;
-            }
-        }
+        public string CommentsRoot { get; }
+        
+        public string AssetsRoot { get; }
 
         public string Content { get; }
 
@@ -171,7 +150,7 @@ namespace wordpress2jekyll
             string content,
             IImmutableList<string> allAttachments,
             string postLink,
-            string subFolder)
+            string assetsRoot)
         {
             var postName = Path.GetFileName(postLink.Trim('/'));
             var attachments = from attachment in allAttachments
@@ -191,7 +170,7 @@ namespace wordpress2jekyll
                 }
                 assetNames = assetNames.Add(fileName);
 
-                var filePath = $"assets/{subFolder}/{fileName}";
+                var filePath = $"{assetsRoot}/{fileName}";
                 var asset = new Asset(uri, filePath);
 
                 assets = assets.Add(asset);
