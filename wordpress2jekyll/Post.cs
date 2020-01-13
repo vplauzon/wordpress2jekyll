@@ -42,7 +42,7 @@ namespace wordpress2jekyll
             PublicationDate = publicationDate;
             Categories = categories.ToImmutableArray();
             Tags = tags.ToImmutableArray();
-            Assets = ExtractAssets(content, allAttachments, link, publicationDate);
+            Assets = ExtractAssets(content, allAttachments, link, SubFolder);
             Comments = comments;
             Content = RenderContent(content, Assets);
         }
@@ -57,14 +57,35 @@ namespace wordpress2jekyll
 
         public IImmutableList<string> Tags { get; }
 
+        public string SubFolder
+        {
+            get
+            {
+                //  Remove leading and trailing slash
+                var parts = Link.Split('/').Skip(1).Reverse().Skip(1).Reverse().ToArray();
+
+                if (parts.Length != 4)
+                {
+                    throw new ArgumentException(nameof(Link));
+                }
+
+                var year = parts[0];
+                var month = int.Parse(parts[1]);
+                //  Quarter of the year
+                //  Month 1-3:  First quarter.  Month 4-6:  Second quarter.  Etc.
+                var quarter = (byte)((month - 1) / 3 + 1);
+                var name = parts[3];
+                var folder = $"{year,0:D2}/{quarter,0:D2}/{name}";
+
+                return folder;
+            }
+        }
+
         public string FilePath
         {
             get
             {
-                //  Remove leading and trailing '/'
-                var parts = Link.Split('/').Skip(1).Reverse().Skip(1).Reverse();
-                var name = string.Join('-', parts) + ".md";
-                var path = $"_posts/{PublicationDate.Year}/{PublicationDate.Month}/{name}";
+                var path = $"_posts/{SubFolder}.md";
 
                 return path;
             }
@@ -74,8 +95,7 @@ namespace wordpress2jekyll
         {
             get
             {
-                var postName = Path.GetFileNameWithoutExtension(FilePath);
-                var path = $"_data/{PublicationDate.Year}/{PublicationDate.Month}/{postName}/comments";
+                var path = $"_data/{SubFolder}/comments";
 
                 return path;
             }
@@ -151,7 +171,7 @@ namespace wordpress2jekyll
             string content,
             IImmutableList<string> allAttachments,
             string postLink,
-            DateTime publicationDate)
+            string subFolder)
         {
             var postName = Path.GetFileName(postLink.Trim('/'));
             var attachments = from attachment in allAttachments
@@ -171,8 +191,7 @@ namespace wordpress2jekyll
                 }
                 assetNames = assetNames.Add(fileName);
 
-                var filePath =
-                    $"assets/{publicationDate.Year}/{publicationDate.Month}/{postName}/{fileName}";
+                var filePath = $"assets/{subFolder}/{fileName}";
                 var asset = new Asset(uri, filePath);
 
                 assets = assets.Add(asset);
