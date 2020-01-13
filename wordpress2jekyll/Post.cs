@@ -75,7 +75,7 @@ namespace wordpress2jekyll
                 //  Month 1-3:  First quarter.  Month 4-6:  Second quarter.  Etc.
                 var quarter = (byte)((month - 1) / 3 + 1);
                 var name = parts[3];
-                var folder = $"{year,0:D2}/{quarter,0:D2}/{name}";
+                var folder = $"{year,0:D2}/{quarter}/{name}";
 
                 return folder;
             }
