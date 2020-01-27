@@ -5,4 +5,14 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="begin-code-regex.txt" />
+    <None Remove="end-code-regex.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="begin-code-regex.txt" />
+    <EmbeddedResource Include="end-code-regex.txt" />
+  </ItemGroup>
+
 </Project>

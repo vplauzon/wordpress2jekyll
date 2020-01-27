@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace codeSections
@@ -16,15 +17,45 @@ namespace codeSections
             }
             else
             {
-                var postPath = args[0];
-                var filePaths = GetFilePaths(postPath);
+                var postsPath = args[0];
+                var filePaths = GetFilePaths(postsPath);
 
-                Console.WriteLine($"Path to _posts:  {postPath}");
+                Console.WriteLine($"Path to _posts:  {postsPath}");
 
                 foreach (var path in filePaths)
                 {
                     Console.WriteLine($"Path:  {path}");
+                    await ProcessPostAsync(path);
                 }
+            }
+        }
+
+        private static async Task ProcessPostAsync(string path)
+        {
+            var content = await File.ReadAllTextAsync(path);
+            var beginRegexText = GetResource("begin-code-regex.txt");
+            var beginRegex = new Regex(beginRegexText);
+            var endRegexText = GetResource("end-code-regex.txt");
+            var endRegex = new Regex(beginRegexText);
+            var beginMatch = beginRegex.Match(content);
+            var endMatch = endRegex.Match(content);
+
+            if (beginMatch.Success)
+            {
+            }
+        }
+
+        private static string GetResource(string resourceName)
+        {
+            var assembly = typeof(Program).Assembly;
+            var fullResourceName = "codeSections." + resourceName;
+
+            using (var stream = assembly.GetManifestResourceStream(fullResourceName))
+            using (var reader = new StreamReader(stream))
+            {
+                var text = reader.ReadToEnd();
+
+                return text;
             }
         }
 
