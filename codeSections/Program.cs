@@ -69,7 +69,8 @@ namespace codeSections
             var code = content.Substring(
                 beginMatch.Index + beginMatch.Value.Length,
                 endMatch.Index - beginMatch.Index - beginMatch.Value.Length);
-            var unencodedCode = WebUtility.HtmlDecode(code);
+            var unencodedCode = WebUtility.HtmlDecode(code.Trim('\r', '\n'))
+                + Environment.NewLine;
             var endTag = "```";
             var parts = ImmutableList<string>
                 .Empty
