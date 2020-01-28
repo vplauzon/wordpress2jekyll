@@ -49,6 +49,11 @@ namespace codeSections
 
                 var newContentParts = ReplaceCode(content, 0, beginMatch, endMatch);
                 var newContent = string.Concat(newContentParts);
+
+                if (newContent != content)
+                {
+                    await File.WriteAllTextAsync(path, newContent);
+                }
             }
         }
 
